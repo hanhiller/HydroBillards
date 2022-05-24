@@ -1,0 +1,28 @@
+[DEFAULT]
+
+Temperature = 100
+Experimental Particle Density = 2e12
+Simulation Particle Density = 20
+Number of CPUs = 1
+time steps = 100000
+
+Constriction Width = 0.3
+Scattering Probability = 0
+Source Drain Ratio = 1.2
+save interval = 2000
+diameter = 10
+injector height,width = 1.5,0.6
+diffusive edges? = yes
+add probe tip? = yes
+probe tip location X,Y = .4,3.7
+
+base output path = ./local_sims/
+inital conditions = fullCircle_exampleInput
+
+reinject partilces with unity energy? = yes
+
+make movie? = yes
+
+generate reinjection probabilities? = no
+set probs method = by length
+generated probs by simulation = []

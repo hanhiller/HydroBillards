@@ -1,0 +1,20 @@
+[DEFAULT]
+
+Temperature = 4
+Experimental Particle Density = 2e12
+Simulation Particle Density = 15
+
+add probe tip? = yes
+probe tip location X,Y = .5,.5
+
+Scattering Probability = .3
+Source Drain Ratio = 1.2
+time steps = 10000
+save interval = 1000
+Number of CPUs = 1
+base output path = ./local_sims/
+make movie? = yes
+
+generate reinjection probabilities? = no
+set probs method = by length
+generated probs by simulation = []

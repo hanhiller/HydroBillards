@@ -1,0 +1,29 @@
+[DEFAULT]
+
+Temperature = 73
+Experimental Particle Density = 1e12
+Simulation Particle Density = 25
+Number of CPUs = 1
+time steps = 100000
+
+current direction? = easy
+Scattering Probability = 0
+Source Drain Ratio = 1.14
+save interval = 20000
+
+diffusive edges? = yes
+reinject partilces with unity energy? = yes
+add probe tip? = no
+probe tip location X,Y = 1,0
+
+base output path = ./local_sims/
+inital conditions = teslaValve_exampleInput
+
+make movie? = yes
+
+generate reinjection probabilities? = no
+set probs method = by length
+generated probs by simulation = []
+
+
+

@@ -1,0 +1,13 @@
+[DEFAULT]
+
+Minimum Scattering Energy = 0.9
+Box Length = 5
+Simulation Particle Density = 50
+Experimental Particle Density = 1e12
+
+Scattering Probability = 0
+time steps = 1000
+save interval = 100
+Number of CPUs = 1
+base output path = ./local_sims/
+inital conditions = periodicBC_exampleInput

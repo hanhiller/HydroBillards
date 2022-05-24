@@ -1,0 +1,23 @@
+[DEFAULT]
+
+Temperature = 4
+Experimental Particle Density = 1e12
+Number of CPUs = 1
+time steps = 10000
+
+Constriction Width = 0.3
+Scattering Probability = 0
+Source Drain Ratio = 1.2
+save interval = 1000
+diameter = 10
+injector height,width = 1,5
+diffusive edges? = no
+add probe tip? = yes
+probe tip location X,Y = 0,4.2
+
+base output path = ./data/
+inital conditions = ''
+
+generate reinjection probabilities? = no
+set probs method = by length
+generated probs by simulation = []
