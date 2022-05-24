@@ -38,8 +38,8 @@ def main():
 		from driftDiffusionSimulatorTeslaValve import driftDiffusionSimulatorTeslaValve
 		currentDirection = config['DEFAULT'].get('current direction?', 'easy')
         
-    elif simType == 'periodicBC':
-        from driftDiffusionSimulatorTeslaValve import driftDiffusionSimulatorTeslaValve
+	elif simType == 'periodicBC':
+		from driftDiffusionSimulatorTeslaValve import driftDiffusionSimulatorTeslaValve
         
 	elif simType == 'Axolotl':
 		from driftDiffusionSimulatorPeriodicBC import driftDiffusionSimulatorPeriodicBC
@@ -79,6 +79,10 @@ def main():
 	fnameBase = '.'.join(splitName)
 	
 	print(outPath+fnameBase)
+    
+	if not os.path.isdir(outPath):
+		os.mkdir(outPath)
+    
 	if not os.path.isdir(outPath+fnameBase):
 		os.mkdir(outPath+fnameBase)
  

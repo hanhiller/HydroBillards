@@ -12,7 +12,7 @@ Source Drain Ratio = 1.2
 time steps = 10000
 save interval = 1000
 Number of CPUs = 1
-base output path = ./local_sims/
+base output path = ./local_sis/
 make movie? = yes
 
 generate reinjection probabilities? = no
