@@ -6,30 +6,30 @@ hydrodynamicCalculations.nb
 __pycache__/
 .DS_Store
 
-Dome_simulation/SIM_data/
-Base_simulation/SIM_data/
+dome_simulation/local_sims/
+base_simulation/local_sims/
 
 fullCircle_simulation/*SIM*/
 fullCircle_simulation/generateProbs/
 fullCircle_simulation/setProbs/
 fullCircle_simulation/SIM_data/
 fullCircle_simulation/movies/
-fullCircle_simulation/local_sims/fullCircle_exampleInput/
+fullCircle_simulation/local_sims/
 
 constriction_simulation/*21*/
 constriction_simulation/*22*/
 constriction_simulation/movies/
-constriction_simulation/local_sims/constriction_exampleInput/
+constriction_simulation/local_sims/
 
 teslaValve_simulation/tesla_valve_trace.GDS
 teslaValve_simulation/*22*/
 teslaValve_simulation/movies/
-teslaValve_simulation/local_sims/teslaValve_exampleInput/
+teslaValve_simulation/local_sims/
 
 periodicBC_simulation/*vary*/
 periodicBC_simulation/movies/
-periodicBC_simulation/local_sims/periodicBC_exampleInput/
+periodicBC_simulation/local_sims/
 
 Axolotl_simulation/*22*/
 Axolotl_simulation/movies/
-Axolotl_simulation/local_sims/Axolotl_exampleInput/
+Axolotl_simulation/local_sims/
