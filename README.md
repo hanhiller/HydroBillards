@@ -7,17 +7,17 @@ In a real physical system, the outgoing states should be sampled from a fermi-di
 As an example, one may run simulations by ...
 
 navigating to the "/base_simulation" folder in a terminal and executing:
-`python ../runBaseScript.py base_exampleInput`
+`python ../runHydroBilliards.py base_exampleInput.txt`
 
 navigating to the "/fullCircle_simulation" folder in a terminal and executing:
-`python ../runFullCircleScript.py fullCircle_exampleInput`
+`python ../runHydroBilliard.py fullCircle_exampleInput.txt`
 
-navigating to the "/dome_simulation" folder in a terminal and executing:
-`python ../runDomeScript.py dome_exampleInput`
+navigating to the "/Axolotl_simulation" folder in a terminal and executing:
+`python ../runHydroBilliard.py Axolotl_exampleInput.txt`
 
 The parameters set by the input text files are as follows:
 
-- **Constriction Width** -- narrowest part of the injector (nominally in microns)
+- **Constriction Width** -- narrowest part of the injector for dome simulations (nominally in microns)
 
 - **Scattering Probability** -- chance of direction being randomized in a given timestep. This maps to electron-phonon scattering
 
@@ -45,7 +45,8 @@ NOTE: For the base, dome, and full circle simualtions, rather than **Minimum Ene
 
 - **base output path** -- the path into which the output data will be stored
 
-
+- **make movie?** -- yes to save snapshots of simulations in ./output/movieFrames. Can be spliced together to create 
+a movie.
 
 To generate an arbitrary geometry, follow the example in "example implementation/Jagged Rectangle". The geometry is defined by "jaggedRectangleCreator.ipynb" and the simulation is performed by...
 
