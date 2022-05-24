@@ -10,10 +10,10 @@ navigating to the "/base_simulation" folder in a terminal and executing:
 `python ../runHydroBilliards.py base_exampleInput.txt`
 
 navigating to the "/fullCircle_simulation" folder in a terminal and executing:
-`python ../runHydroBilliard.py fullCircle_exampleInput.txt`
+`python ../runHydroBilliards.py fullCircle_exampleInput.txt`
 
 navigating to the "/Axolotl_simulation" folder in a terminal and executing:
-`python ../runHydroBilliard.py Axolotl_exampleInput.txt`
+`python ../runHydroBilliards.py Axolotl_exampleInput.txt`
 
 The parameters set by the input text files are as follows:
 
@@ -51,7 +51,7 @@ a movie.
 To generate an arbitrary geometry, follow the example in "example implementation/Jagged Rectangle". The geometry is defined by "jaggedRectangleCreator.ipynb" and the simulation is performed by...
 
 navigating to the "/Jagged Rectangle" folder in a terminal and executing:
-`python ../runBaseScript.py Jag_rectangle_4x20_700N_0p9E.txt`
+`python ../runHydroBilliardsScript.py Jag_rectangle_4x20_700N_0p9E.txt`
 
 Simulation plots can be viewed with their respective "... analysis.ipynb" files in a jupyter notebook.
 
