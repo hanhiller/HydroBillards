@@ -42,32 +42,34 @@ def main():
 		from driftDiffusionSimulatorTeslaValve import driftDiffusionSimulatorTeslaValve
         
 	elif simType == 'Axolotl':
-		from driftDiffusionSimulatorPeriodicBC import driftDiffusionSimulatorPeriodicBC
+		from driftDiffusionSimulatorAxolotl import driftDiffusionSimulatorAxolotl
 
 	Temp = config['DEFAULT'].getfloat('Temperature', 70)
 	sourceDrainRatio = config['DEFAULT'].getfloat('Source Drain Ratio', 1.2)
 	expPartDensity = config['DEFAULT'].getfloat('Experimental Particle Density', 2e12)
 	simPartDensity = config['DEFAULT'].getfloat('Simulation Particle Density', 20)
 	pScatter = config['DEFAULT'].getfloat('Scattering Probability', 0)
-	diffusiveEdges = config['DEFAULT'].getboolean('diffusive edges?',False)
+	p_transmission = config['DEFAULT'].getfloat('Contact Transmission Probability', 1.)
+	diffusiveEdges = config['DEFAULT'].getboolean('diffusive edges?',True)
     
 	tip = config['DEFAULT'].getboolean('add probe tip?', True)
 	if tip:
 		probeCenterX,probeCenterY = [float(s) for s in config['DEFAULT'].get(
 					'probe tip location X,Y','0,0').split(',')]
-		print("Probe tip location:", probeCenterX, probeCenterY)    
+		tipD = config['DEFAULT'].getfloat('probe tip diameter', 0.5)
+		print("Probe tip location:", probeCenterX, probeCenterY, "diameter:", tipD) 
     
 	reinjectWithE1 = config['DEFAULT'].getboolean('reinject partilces with unity energy?', False)  
 	stepSize = config['DEFAULT'].getfloat('step size', 0.01)
 	collisionDist = config ['DEFAULT'].getfloat('collision overlap', 0.05)
-	fieldRes = config['DEFAULT'].getfloat('histogram resolution',0.1)
+	fieldRes = config['DEFAULT'].getfloat('histogram resolution',0.05)
     
 	outPath = config['DEFAULT'].get('base output path', './')
 	Nsteps = config['DEFAULT'].getint('time steps', 10000)
 	dNsave = config['DEFAULT'].getint('save interval', 1000)
 	Ncpu = config['DEFAULT'].getint('Number of CPUs', 1)
 	initCondFile = config['DEFAULT'].get('inital conditions','')
-	makeMovie = diffusiveEdges = config['DEFAULT'].getboolean('make movie?',False)
+	makeMovie = config['DEFAULT'].getboolean('make movie?',False)
     
 	generateReinjectionProbsYN = config['DEFAULT'].getboolean('generate reinjection probabilities?', False)
 	setProbsMethod = config['DEFAULT'].get('set probs method','by length')
@@ -128,7 +130,7 @@ def main():
 
 		dSim.tip = tip
 		if dSim.tip:
-			dSim.probeCenterX, dSim.probeCenterY = probeCenterX, probeCenterY
+			dSim.probeCenterX, dSim.probeCenterY, dSim.probeTipDiameter = probeCenterX, probeCenterY, tipD
 		dSim.updateBody()
 
 		dSim.generateReinjectionProbsYN = generateReinjectionProbsYN
@@ -155,6 +157,7 @@ def main():
 		dSim.setNpart(dSim.simPartDensity, dSim.Area)
 		dSim.updateNparticles()
         
+		dSim.p_transmission = p_transmission
 		dSim.calc_pScatter() # if input pScatter = 0, no bulk scattering, else is t-dependent
 		if pScatter ==0: 
 			dSim.updateScatterProb(pScatter)
@@ -163,11 +166,11 @@ def main():
 			dSim.consumeAndReinject = dSim.consumeAndReinject_withE1
         
 		dSim.setFieldResolution(fieldRes)
+		print(dSim.fieldResolution)
 		dSim.setOverlapRadius(collisionDist)
 		dSim.setStepSize(stepSize)
 		dSim.updateNparticles()
         
-		dSim.diffusive = diffusiveEdges
 		if diffusiveEdges:
 			dSim.diffusiveWalls()
 			print("Diffusive Edges")
@@ -216,9 +219,9 @@ def main():
             
 		dSims.append(dSim)
 
-	print("Temp SourceDrain Emin expPartDensity simPartDensity pScatter")
-	print(dSim.Temp, dSim.sourceDrainRatio, dSim.Emin, dSim.expPartDensity,dSim.simPartDensity, dSim.p_scatter)
-
+	print("Temp SourceDrain Emin expPartDensity simPartDensity pScatter pTransmission")
+	print(dSim.Temp, dSim.sourceDrainRatio, dSim.Emin, dSim.expPartDensity,dSim.simPartDensity, dSim.p_scatter, dSim.p_transmission)
+	print(dSim.fieldResolution)
 	jobs=[]
 	for iterationNum,dSim in enumerate(dSims):
         

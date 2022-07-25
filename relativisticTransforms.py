@@ -91,7 +91,7 @@ def scatterMasslessParticles(p1,p2,Emin):
 	p12,E12 = boost(p11,E11,-v1)
 	p22,E22 = boost(p21,E21,-v1)
 	
-	if E12 <Emin or E22 <Emin:
+	if E12 < Emin or E22 < Emin:
 		return p1,p2
 	else:
 		if np.random.rand()<0.5:

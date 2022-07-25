@@ -14,7 +14,7 @@ read dNsave
 
 for T in $(seq ${lowT} ${dT} ${highT})
 do
-    file="teslaValve_T${T}_n${simPartDensity}_compute_easy.txt"
+    file="teslaValve_T${T}_n${simPartDensity}_ckpt_diffusive_easy.txt"
 
     echo "[DEFAULT]" > $file
     echo "" >> $file
@@ -26,6 +26,7 @@ do
     echo "" >> $file
     echo "current direction? = easy" >> $file
     echo "Scattering Probability = 0" >> $file
+    echo "Contact Transmission Probability = 1." >> $file
     echo "Source Drain Ratio = 1.14" >> $file
     echo "save interval = $dNsave" >> $file
     echo "" >> $file
@@ -34,19 +35,19 @@ do
     echo "add probe tip? = no" >> $file
     echo "probe tip location X,Y = 0,0" >> $file
     echo "" >> $file
-    echo "base output path = ./compute_partition_SD1.14/" >> $file
-    echo "inital conditions = teslaValve_T${T}_n${simPartDensity}_compute_easy" >> $file
+    echo "base output path = ./ckpt_SD1.14_diffusiveEdges/" >> $file
+    echo "inital conditions = teslaValve_T${T}_n${simPartDensity}_ckpt_diffusive_easy" >> $file
     echo "" >> $file
     echo "generate reinjection probabilities? = no" >> $file
     echo "set probs method = by length" >> $file
     echo "generated probs by simulation = []" >> $file
 
-    sed -i '$d' teslaValve.sbatch
-    echo "python ../runTeslaValveScript.py ${file}" >> "teslaValve.sbatch"
-    sbatch teslaValve.sbatch
+    #sed -i '$d' teslaValve.sbatch
+    echo "python ../runHydroBilliards.py ${file}" >> "teslaValve.sbatch"
+    #sbatch teslaValve.sbatch
 
 
-   file="teslaValve_T${T}_n${simPartDensity}_compute_hard.txt"
+   file="teslaValve_T${T}_n${simPartDensity}_ckpt_diffusive_hard.txt"
 
     echo "[DEFAULT]" > $file
     echo "" >> $file
@@ -58,6 +59,7 @@ do
     echo "" >> $file
     echo "current direction? = hard" >> $file
     echo "Scattering Probability = 0" >> $file
+    echo "Contact Transmission Probability = 1." >> $file
     echo "Source Drain Ratio = 1.14" >> $file
     echo "save interval = $dNsave" >> $file
     echo "" >> $file
@@ -66,15 +68,15 @@ do
     echo "add probe tip? = no" >> $file
     echo "probe tip location X,Y = 0,0" >> $file
     echo "" >> $file
-    echo "base output path = ./compute_partition_SD1.14/" >> $file
-    echo "inital conditions = teslaValve_T${T}_n${simPartDensity}_compute_hard" >> $file
+    echo "base output path = ./ckpt_SD1.14_diffusiveEdges/" >> $file
+    echo "inital conditions = teslaValve_T${T}_n${simPartDensity}_ckpt_diffusive_hard" >> $file
     echo "" >> $file
     echo "generate reinjection probabilities? = no" >> $file
     echo "set probs method = by length" >> $file
     echo "generated probs by simulation = []" >> $file
     
-    sed -i '$d' teslaValve.sbatch
-    echo "python ../runTeslaValveScript.py ${file}" >> "teslaValve.sbatch"
-    sbatch teslaValve.sbatch
+    #sed -i '$d' teslaValve.sbatch
+    echo "python ../runHydroBilliards.py ${file}" >> "teslaValve.sbatch"
+    #sbatch teslaValve.sbatch
     
 done

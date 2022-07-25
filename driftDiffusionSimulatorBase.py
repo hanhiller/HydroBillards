@@ -31,18 +31,18 @@ class driftDiffusionSimulatorBase:
 		#self.setSimPartDensity(self.expPartDensity, self.Temp)
         
 		self.p_scatter = 0.01
+		self.p_transmission = 1.
 		self.sourceDrainRatio = 1.
 		self.rOverlap = 0.05
 		self.setOverlapRadius(self.rOverlap)
 		self.initializationCount = 1000000
 		self.setStepSize(.01)
         
-		self.boxL= 3.
 		self.NumberDrainBins = 10
 		self.NcornersCrossed = 0
         
 		self.tip = False
-		self.probeTipDiameter = 1
+		self.probeTipDiameter = .35
 		self.probeCenterX = 0
 		self.probeCenterY = 0
 
@@ -55,7 +55,7 @@ class driftDiffusionSimulatorBase:
 		self.generatedProbs = []
 		self.rollIndex =0
 		
-		self.setBoundaryLength(self.boxL)
+		self.setBoundaryLength(3.)
 		self.updateBody()
 		self.calcArea()
 		self.setFieldResolution(.1)
@@ -200,7 +200,7 @@ class driftDiffusionSimulatorBase:
 		self.symmetrizedNinjected_DIF = np.zeros(self.nDeviceEdges)
         
 		nContacts = len(self.sources)+len(self.drains) #number of ohmic contacts, M
-		self.currentMatrix = np.zeros((nContacts, nContacts)) # MxM matrix for Nabs between pairs of ohmic contacts; rows=inj; columns=abs
+		self.currentMatrix = np.zeros((nContacts, nContacts)) # MxM matrix between pairs of ohmic contacts; rows=inj; columns=abs
         
 		self.contactLookUp = np.sort(np.concatenate([self.sources, self.drains])) # sorted list of ohmic contact indicies
 		
@@ -226,7 +226,7 @@ class driftDiffusionSimulatorBase:
         # changes diffusive edges into mirror edges
 		s,d,m,r,f = 2,1,0,-1,-2 #'source','drain','mirror','rough'
         
-		self.edgeStyle = [r if edge==m else edge for edge in self.edgeStyle]
+		self.edgeStyle = [r if x==m else x for x in self.edgeStyle]
 		self.setUpEdges()
         
 	def mirrorWalls(self):
@@ -569,11 +569,13 @@ class driftDiffusionSimulatorBase:
 				self.vX[i] = np.cos(theta)
 				self.vY[i] = np.sin(theta)
 		
-		
 		_overlaps = self.checkOverlaps()
+        
+        # dissallow reinjected particles from scattering for 1 timestep
 		for i in injectedPtcs:
 			self.overlaps[:,i] = True
 			self.overlaps[i,:] = True
+            
 		self.overlaps[np.array(squareform(np.invert(_overlaps)), dtype=bool)] = False
 		
 		_idx_i = self.i_lookup[_overlaps]
@@ -604,7 +606,10 @@ class driftDiffusionSimulatorBase:
 				
 			self.overlaps[i,j] = True
 			
-				
+		for i in injectedPtcs:
+			self.overlaps[:,i] = False
+			self.overlaps[i,:] = False
+            
 		#update global time index
 		self.timeCount+=1
 
@@ -679,48 +684,76 @@ class driftDiffusionSimulatorBase:
 	    return injectX,injectY, injectIdx
     
 	def consumeAndReinject(self,partIdx,edgeIdx):
-		if self.generateReinjectionProbsYN or self.sourceDrainRatio==1.:
-			xNew,yNew = self.injectFromContact(edgeIdx)
-			idxNew=edgeIdx
+        # checks if contact will transmit an incoming electron
+        # if z-zero current sim, reinject from same contact
+        # otherwise, reinject based on set probabilites; update stats
+        
+		if np.random.rand() > self.p_transmission:
+			self.scatterOffContact(partIdx, edgeIdx)
+            
 		else:
-			xNew,yNew,idxNew = self.injectPosition()
-		self.Nabsorbed[edgeIdx]+=1		
-		self.Ninjected[idxNew]+=1
-        
-		self.updatateCurrentMatrix(partIdx, edgeIdx, idxNew) # particle number, absorbtion index, new injection index
+			if self.generateReinjectionProbsYN or self.sourceDrainRatio==1.:
+				xNew,yNew = self.injectFromContact(edgeIdx)
+				idxNew=edgeIdx
+			else:
+				xNew,yNew,idxNew = self.injectPosition()
+			self.Nabsorbed[edgeIdx]+=1		
+			self.Ninjected[idxNew]+=1
 
-		vXNew,vYNew = self.randCosNorm(
-						self.normX[idxNew],self.normY[idxNew])
-		
-		self.vX[partIdx],self.vY[partIdx] = vXNew,vYNew
-        
-        #small offset to make sure particle is in bounds
-		self.Xpos[partIdx] = xNew+vXNew*self.DeltaX*.0001
-		self.Ypos[partIdx] = yNew+vYNew*self.DeltaX*.0001
+			self.updatateCurrentMatrix(partIdx, edgeIdx, idxNew) # particle number, absorbtion index, new injection index
+
+			vXNew,vYNew = self.randCosNorm(
+                            self.normX[idxNew],self.normY[idxNew])
+
+			self.vX[partIdx],self.vY[partIdx] = vXNew,vYNew
+
+            #small offset to make sure particle is in bounds
+			self.Xpos[partIdx] = xNew+vXNew*self.DeltaX*.0001
+			self.Ypos[partIdx] = yNew+vYNew*self.DeltaX*.0001
 	
     
+	def scatterOffContact(self, partIdx, contactIdx):
+        
+        # particles not transmitted through a contact; scatters off
+        # mirror/diffusive chosen from non contact edge styles
+        
+		nonContantEdges = self.edgeStyle[(self.edgeStyle==-1)+(self.edgeStyle==0)]
+		i = np.random.randint(len(nonContantEdges))
+        
+		if nonContantEdges[i] == -1: # diffusive edge
+			self.scatterFromDiffusiveEdge(partIdx,contactIdx)
+            
+		elif nonContantEdges[i] == 0: # mirror edge
+			self.reflectFromMirrorEdge(partIdx,contactIdx)
+
 	def consumeAndReinject_withE1(self,partIdx,edgeIdx):
         
-    # replaces the original consume and reinejct function when called
-		if self.generateReinjectionProbsYN or self.sourceDrainRatio==1.:
-			xNew,yNew = self.injectFromContact(edgeIdx)
-			idxNew=edgeIdx
+        # reinjects particles with an energy of 1
+        # replaces the original consume and reinejct function when called
+    
+		if np.random.rand() > self.p_transmission:
+			self.scatterOffContact(partIdx, edgeIdx)
+            
 		else:
-			xNew,yNew,idxNew = self.injectPosition()
-		self.Nabsorbed[edgeIdx]+=1		
-		self.Ninjected[idxNew]+=1
-        
-		self.updatateCurrentMatrix(partIdx, edgeIdx, idxNew) # particle number, absorbtion index, new injection index
-		
-		vXNew,vYNew = self.randCosNorm(
-						self.normX[idxNew],self.normY[idxNew])
-		
-		self.vX[partIdx],self.vY[partIdx] = vXNew,vYNew
-		self.pR[partIdx] = 1
-        
-		#small offset to make sure particle is in bounds
-		self.Xpos[partIdx] = xNew+vXNew*self.DeltaX*.0001
-		self.Ypos[partIdx] = yNew+vYNew*self.DeltaX*.0001
+			if self.generateReinjectionProbsYN or self.sourceDrainRatio==1.:
+				xNew,yNew = self.injectFromContact(edgeIdx)
+				idxNew=edgeIdx
+			else:
+				xNew,yNew,idxNew = self.injectPosition()
+			self.Nabsorbed[edgeIdx]+=1		
+			self.Ninjected[idxNew]+=1
+
+			self.updatateCurrentMatrix(partIdx, edgeIdx, idxNew) # particle number, absorbtion index, new injection index
+
+			vXNew,vYNew = self.randCosNorm(
+                            self.normX[idxNew],self.normY[idxNew])
+
+			self.vX[partIdx],self.vY[partIdx] = vXNew,vYNew
+			self.pR[partIdx] = 1
+
+            #small offset to make sure particle is in bounds
+			self.Xpos[partIdx] = xNew+vXNew*self.DeltaX*.0001
+			self.Ypos[partIdx] = yNew+vYNew*self.DeltaX*.0001
         
         
 	def saveFrame(self):

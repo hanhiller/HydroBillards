@@ -2,7 +2,7 @@
 
 Constriction Width and Thickness = 0.5,.05
 
-Temperature = 4
+Temperature = 100
 Simulation Particle Density =50
 Experimental Particle Density = 1e12
 Number of CPUs = 1

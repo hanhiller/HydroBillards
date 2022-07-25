@@ -15,21 +15,25 @@ fullCircle_simulation/setProbs/
 fullCircle_simulation/SIM_data/
 fullCircle_simulation/movies/
 fullCircle_simulation/local_sims/
+fullCircle_simulation/.DS_Store
 
 constriction_simulation/*21*/
 constriction_simulation/*22*/
 constriction_simulation/movies/
 constriction_simulation/local_sims/
+constriction_simulation/.DS_Store
 
-teslaValve_simulation/tesla_valve_trace.GDS
 teslaValve_simulation/*22*/
 teslaValve_simulation/movies/
 teslaValve_simulation/local_sims/
+teslaValve_simulation/.DS_Store
 
 periodicBC_simulation/*vary*/
 periodicBC_simulation/movies/
 periodicBC_simulation/local_sims/
+periodicBC_simulation/.DS_Store
 
 Axolotl_simulation/*22*/
 Axolotl_simulation/movies/
 Axolotl_simulation/local_sims/
+Axolotl_simulation/.DS_Store

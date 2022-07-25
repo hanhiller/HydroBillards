@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 class driftDiffusionSimulatorTeslaValve(driftDiffusionSimulatorBase):
 	'''
 	driftDiffusionSimulatorTeslaValve simulates hydrodynamic flow of dirac electrons
-    through a valve-like device where viscous flow gives rise to a path-dependent resistance
+    through a valve-like device where viscous flow allegedly gives rise to a path-dependent resistance
 	'''
 	def __init__(self):
 	
