@@ -21,7 +21,6 @@ class FullCircleSimulator(SimulatorBase):
 
     def __init__(self, temperature: float, config: FullCircleSimulationConfig):
         # self._source_drain_ratio = config.source_drain_ratio
-        self._diffusive = config.diffusive_edges
 
         # TODO: Can we make update_body() only once at the end of setting this parameters
         self._set_diameter(config.diameter)

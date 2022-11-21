@@ -45,6 +45,7 @@ class SimulatorBase(ABC):
                                 self._simulation_particle_density,
                                 self._temperature)
 
+        self._diffusive = config.diffusive_edges
         self._p_scatter = config.scattering_probability
 
         self._overlap_radius = config.collision_distance
@@ -84,6 +85,17 @@ class SimulatorBase(ABC):
         self._generated_probs = []
         self._roll_index = 0
 
+        self._save_interval = config.save_interval
+
+        self._make_movies = config.make_movie
+        self._counts_per_snap_shot = 1000
+        self._frame_num = 0
+
+        # Keeps track of pairs that were overlapping (within collision distance) in previous time-step.
+        self._overlapping_pairs = set()
+
+        # TODO: Check impact of setting this on different shapes.
+        # self._set_boundary_length(3.0)
         self.update_body()
         self.calc_area()
         self.set_field_resolution(config.field_resolution)
@@ -94,15 +106,6 @@ class SimulatorBase(ABC):
         self._update_particles()
         # TODO: This looks redundant, as it is already invoked in _update_particles()
         # self._find_overlaps()
-
-        self._save_interval = config.save_interval
-
-        self._make_movies = config.make_movie
-        self._counts_per_snap_shot = 1000
-        self._frame_num = 0
-
-        # Keeps track of pairs that were overlapping (within collision distance) in previous time-step.
-        self._overlapping_pairs = set()
 
     def _set_boundary_length(self, length):
         self._box_l = length
@@ -273,7 +276,6 @@ class SimulatorBase(ABC):
     def _update_particles(self):
 
         # Randomly assigns (x, y) position to N particles
-        # TODO: Why -0.5?
         self._x_pos = self._box_l * (np.random.rand(self._n_part) - 0.5)
         self._y_pos = self._box_l * (np.random.rand(self._n_part) - 0.5)
 
@@ -287,6 +289,11 @@ class SimulatorBase(ABC):
             out_of_bounds = find_out_of_bounds(self._x_pos, self._y_pos, self._border_path)
 
         self._overlapping_pairs = self._find_overlapping_pairs()
+
+        self.tl = np.where((self._x_pos < 0) & (self._y_pos >= 0))[0]
+        self.tr = np.where((self._x_pos >= 0) & (self._y_pos >= 0))[0]
+        self.bl = np.where((self._x_pos < 0) & (self._y_pos < 0))[0]
+        self.br = np.where((self._x_pos >= 0) & (self._y_pos < 0))[0]
 
         # Assign random velocity direction
         thetas = np.random.rand(self._n_part) * 2.0 * np.pi
@@ -397,8 +404,8 @@ class SimulatorBase(ABC):
         oob_y = self._y_pos[out_of_bound_indices] - self._v_y[out_of_bound_indices] * self._step_size
 
         # Recompute bound status of out of bound particles, using backtracked position of particles.
-        # remaining_oob_indices = find_out_of_bounds(oob_x, oob_y, self._border_path)
-        i, remaining_oob_indices = find_bound_status(oob_x, oob_y, self._border_x, self._border_y)
+        remaining_oob_indices = find_out_of_bounds(oob_x, oob_y, self._border_path)
+        # i, remaining_oob_indices = find_bound_status(oob_x, oob_y, self._border_x, self._border_y)
         while remaining_oob_indices.size > 0:
             # print(f"Remaining out of bounds: {len(remaining_oob_indices)}")
             thetas = np.random.rand(remaining_oob_indices.size) * 2 * np.pi
@@ -409,8 +416,8 @@ class SimulatorBase(ABC):
 
             # Ideally, we should only check for remaining points, instead of oob_x and oob_y. But then we will lose
             # their relative position in oob_x and oob_y, which is needed to backtrack them.
-            # remaining_oob_indices = find_out_of_bounds(oob_x, oob_y, self._border_path)
-            i, remaining_oob_indices = find_bound_status(oob_x, oob_y, self._border_x, self._border_y)
+            remaining_oob_indices = find_out_of_bounds(oob_x, oob_y, self._border_path)
+            # i, remaining_oob_indices = find_bound_status(oob_x, oob_y, self._border_x, self._border_y)
         return oob_x, oob_y
 
     @staticmethod
@@ -431,8 +438,9 @@ class SimulatorBase(ABC):
         self._l_no_scatter += self._step_size
 
         # Find particles (their indices) that are inside and outside the border path.
-        # within_bound_indices, out_of_bound_indices = get_inbound_outbound(self._x_pos, self._y_pos, self._border_path)
-        within_bound_indices, out_of_bound_indices = find_bound_status(self._x_pos, self._y_pos, self._border_x, self._border_y)
+        within_bound_indices, out_of_bound_indices = get_inbound_outbound(self._x_pos, self._y_pos, self._border_path)
+        # within_bound_indices, out_of_bound_indices = find_bound_status(self._x_pos, self._y_pos, self._border_x,
+        #                                                                self._border_y)
 
         # Step 1: Take care of in bounds particles.
         randomly_scatter(within_bound_indices, self._p_scatter, self._v_x, self._v_y)
@@ -462,8 +470,10 @@ class SimulatorBase(ABC):
             self.categorize_crossed_edges(crossed_edges_list, out_of_bound_indices)
 
         # Handle particles that did not cross any edge. Exactly between two.
-        self._v_x[out_of_bound_indices[none_crossed]] *= -1
-        self._v_y[out_of_bound_indices[none_crossed]] *= -1
+        # self._v_x[out_of_bound_indices[none_crossed]] *= -1
+        # self._v_y[out_of_bound_indices[none_crossed]] *= -1
+        self._v_x[none_crossed] *= -1
+        self._v_y[none_crossed] *= -1
 
         injected_particles = set()
 
@@ -631,22 +641,47 @@ class SimulatorBase(ABC):
 
     def _save_frame(self, output_dir: pathlib.Path):
         file_name = output_dir / f"frame_{self._frame_num}"
-        total_absorbed = np.sum(self._absorbed)
-        fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+        # total_absorbed = np.sum(self._absorbed)
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         for i, x_component in enumerate(self._border_x_split):
             y_component = self._border_y_split[i]
             ax.plot(x_component, y_component, 'black')
 
-        ax.plot(self._x_pos[0], self._y_pos[0], 'b.', markersize=25)
-        ax.plot(self._x_pos[1:], self._y_pos[1:], 'r.', markersize=5)
+        # choice = np.random.randint(0, 4) % 4
+        #
+        # marker_size = 0.5
+        #
+        # if choice == 0:
+        #     ax.plot(self._x_pos[self.tl], self._y_pos[self.tl], 'r.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.tr], self._y_pos[self.tr], 'y.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.bl], self._y_pos[self.bl], 'k.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.br], self._y_pos[self.br], 'b.', markersize=marker_size)
+        # elif choice == 1:
+        #     ax.plot(self._x_pos[self.tr], self._y_pos[self.tr], 'y.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.tl], self._y_pos[self.tl], 'r.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.br], self._y_pos[self.br], 'b.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.bl], self._y_pos[self.bl], 'k.', markersize=marker_size)
+        # elif choice == 2:
+        #     ax.plot(self._x_pos[self.bl], self._y_pos[self.bl], 'k.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.tr], self._y_pos[self.tr], 'y.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.br], self._y_pos[self.br], 'b.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.tl], self._y_pos[self.tl], 'r.', markersize=marker_size)
+        # else:
+        #     ax.plot(self._x_pos[self.tl], self._y_pos[self.tl], 'r.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.bl], self._y_pos[self.bl], 'k.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.br], self._y_pos[self.br], 'b.', markersize=marker_size)
+        #     ax.plot(self._x_pos[self.tr], self._y_pos[self.tr], 'y.', markersize=marker_size)
 
-        ax.text(self._box_l / 5, self._box_l, f"total absorbed: {total_absorbed}", fontsize=14)
-        ax.text(self._box_l / 5, self._box_l + 1.25, f"timestep: {self._time_count}", fontsize=14)
-        ax.text(-self._box_l / 2, self._box_l, f"temperature: {self._temperature}", fontsize=14)
-        ax.text(-self._box_l / 2, self._box_l + 1.25, f"sim density: {self._simulation_particle_density}", fontsize=14)
+        ax.plot(self._x_pos[0], self._y_pos[0], 'b.', markersize=25)
+        ax.plot(self._x_pos[1:], self._y_pos[1:], 'r.', markersize=2)
+
+        # ax.text(self._box_l / 5, self._box_l, f"total absorbed: {total_absorbed}", fontsize=14)
+        # ax.text(self._box_l / 5, self._box_l + 1.25, f"timestep: {self._time_count}", fontsize=14)
+        # ax.text(-self._box_l / 2, self._box_l, f"temperature: {self._temperature}", fontsize=14)
+        # ax.text(-self._box_l / 2, self._box_l + 1.25, f"sim density: {self._simulation_particle_density}", fontsize=14)
         ax.axis('off')
-        fig.savefig(file_name, dpi=250)
+        fig.savefig(file_name, dpi=300)
         plt.close()
         self._frame_num += 1
 
@@ -662,8 +697,8 @@ class SimulatorBase(ABC):
             self.time_step()
 
             if self._make_movies:
-                if self._time_count % self._save_interval == 0:
-                    print("Saving frame")
+                if self._time_count % 10 == 0:
+                    print(f"Saving frame: {self._frame_num}")
                     self._save_frame(output_dir)
 
             if self._time_count % self._save_interval == 0:

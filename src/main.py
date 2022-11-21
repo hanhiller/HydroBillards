@@ -7,7 +7,9 @@ import typer
 from pathlib import Path
 from datetime import datetime
 
+from configs.tesla_valve_simulation_config import TeslaValveSimulationConfig
 from simulators.full_circle_simulator import FullCircleSimulator
+from simulators.tesla_valve_simulator import TeslaValveSimulator
 from utils.miscellaneous import highlighted_str
 
 from configs.base_simulation_config import BaseSimulationConfig
@@ -22,6 +24,7 @@ FULL_CIRCLE_CONFIG = CONFIG_DIR / "full_circle.config"
 
 class SupportedSimulation(str, Enum):
     FullCircle = "full_circle"
+    TeslaValve = "tesla_valve"
 
 
 def _load_full_circle_config():
@@ -31,10 +34,15 @@ def _load_full_circle_config():
             return FullCircleSimulationConfig(**json.load(file))
 
 
+def _load_tesla_valve_config():
+    pass
+
+
 # Defines a list of all supported simulations and their corresponding configuration file.
 # These configuration files will be loaded into memory when the application starts.
 SUPPORTED_CONFIG_CREATORS = {
-    SupportedSimulation.FullCircle.value: lambda: _load_full_circle_config()
+    SupportedSimulation.FullCircle.value: lambda: _load_full_circle_config(),
+    SupportedSimulation.TeslaValve.value: lambda: _load_tesla_valve_config()
 }
 
 _loaded_configs = None
@@ -193,10 +201,18 @@ def simulate(sim_type: SupportedSimulation =
              )):
     typer.echo(f"Selected simulation type: {sim_type}. Temperature[{temperature}]")
 
-    simulation_config = _loaded_configs[sim_type] or FullCircleSimulationConfig()
+    simulation_config = _loaded_configs[sim_type]
+    if simulation_config is None:
+        if sim_type == SupportedSimulation.FullCircle:
+            simulation_config = FullCircleSimulationConfig()
+        elif sim_type == SupportedSimulation.TeslaValve:
+            simulation_config = TeslaValveSimulationConfig()
+
     simulator = None
     if sim_type == SupportedSimulation.FullCircle:
         simulator = FullCircleSimulator(temperature, simulation_config)
+    elif sim_type == SupportedSimulation.TeslaValve:
+        simulator = TeslaValveSimulator(temperature, simulation_config)
 
     simulator.calc_scatter_probability()
     simulator.update_body()

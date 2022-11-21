@@ -6,10 +6,11 @@ class FullCircleSimulationConfig(BaseSimulationConfig):
     """
     Configuration to simulation full circle.
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._constriction_width = kwargs.get("_constriction_width", 0.5)
-        self._diameter = kwargs.get("_diameter", 30)
+        self._diameter = kwargs.get("_diameter", 50)
         self._inject_height = kwargs.get("_inject_height", 1.5)
         self._inject_width = kwargs.get("_inject_width", 0.6)
 

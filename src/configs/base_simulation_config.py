@@ -8,10 +8,10 @@ class BaseSimulationConfig(ABC):
     """
     def __init__(self, **kwargs):
         self._experimental_particle_density = kwargs.get("_experimental_particle_density", 2e12)
-        self._simulation_particle_density = kwargs.get("_simulation_particle_density", 25)
+        self._simulation_particle_density = kwargs.get("_simulation_particle_density", 400)
         self._source_drain_ratio = kwargs.get("_source_drain_ratio", 1.2)
         self._scattering_probability = kwargs.get("_scattering_probability", 0.1)
-        self._add_probe_tip = kwargs.get("_add_probe_tip", True)
+        self._add_probe_tip = kwargs.get("_add_probe_tip", False)
         self._probe_center_x = kwargs.get("_probe_center_x", 0.4)
         self._probe_center_y = kwargs.get("_probe_center_y", 3.7)
         self._re_inject_with_unit_energy = kwargs.get("_re_inject_with_unit_energy", False)
@@ -25,7 +25,7 @@ class BaseSimulationConfig(ABC):
         self._re_injection_probabilities = kwargs.get("_re_injection_probabilities", False)
         self._probe_method = kwargs.get("_probe_method", "L")
         self._transmission_probability = kwargs.get("_transmission_prob", 0.5)
-        self._make_movie = kwargs.get("_make_movie", False)
+        self._make_movie = kwargs.get("_make_movie", True)
 
     @property
     def experimental_particle_density(self):
