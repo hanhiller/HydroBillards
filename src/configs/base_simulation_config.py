@@ -25,7 +25,7 @@ class BaseSimulationConfig(ABC):
         self._re_injection_probabilities = kwargs.get("_re_injection_probabilities", False)
         self._probe_method = kwargs.get("_probe_method", "L")
         self._transmission_probability = kwargs.get("_transmission_prob", 0.5)
-        self._make_movie = kwargs.get("_make_movie", True)
+        self._make_movie = kwargs.get("_make_movie", False)
 
     @property
     def experimental_particle_density(self):

@@ -462,8 +462,7 @@ class SimulatorBase(ABC):
         # Make the function numpy uFunc (Universal Function) so that it can be executed element-wise.
         crossed_edges_list = self.perform_crossed_edges(find_crossed_edges, out_of_bound_indices)
 
-        self._x_pos[out_of_bound_indices] = oob_x
-        self._y_pos[out_of_bound_indices] = oob_y
+        self.update_position(oob_x, oob_y, out_of_bound_indices)
 
         # Categorize the particles based on number of edges they crossed.
         multiple_crossed, none_crossed, one_crossed = \
@@ -472,8 +471,7 @@ class SimulatorBase(ABC):
         # Handle particles that did not cross any edge. Exactly between two.
         # self._v_x[out_of_bound_indices[none_crossed]] *= -1
         # self._v_y[out_of_bound_indices[none_crossed]] *= -1
-        self._v_x[none_crossed] *= -1
-        self._v_y[none_crossed] *= -1
+        self.bounce_none_crossed(none_crossed)
 
         injected_particles = set()
 
@@ -504,6 +502,22 @@ class SimulatorBase(ABC):
 
         overlapping_pairs = self._find_overlapping_pairs()
 
+        self.process_scatter(injected_particles, overlapping_pairs)
+
+        # Replace with the one just used for next time.
+        self._overlapping_pairs = overlapping_pairs
+
+        self._time_count += 1
+
+        if self._time_count == self._initialization_count:
+            self.reset_data()
+
+        # Update histogram every 20th step
+        if self._time_count % 20 == 0:
+            self.collect_data()
+
+    def process_scatter(self, injected_particles, overlapping_pairs):
+        print(f"Overlapping pairs: {len(overlapping_pairs)}")
         for pair in overlapping_pairs:
             '''
             We do not process all overlapping pairs because the pairs can remain overlapped even after their collision
@@ -520,17 +534,13 @@ class SimulatorBase(ABC):
 
             self._overlapping_pairs.add((i, j))
 
-        # Replace with the one just used for next time.
-        self._overlapping_pairs = overlapping_pairs
+    def update_position(self, oob_x, oob_y, out_of_bound_indices):
+        self._x_pos[out_of_bound_indices] = oob_x
+        self._y_pos[out_of_bound_indices] = oob_y
 
-        self._time_count += 1
-
-        if self._time_count == self._initialization_count:
-            self.reset_data()
-
-        # Update histogram every 20th step
-        if self._time_count % 20 == 0:
-            self.collect_data()
+    def bounce_none_crossed(self, none_crossed):
+        self._v_x[none_crossed] *= -1
+        self._v_y[none_crossed] *= -1
 
     def reset_data(self):
         # Reset statistics after initialization count steps. TODO: Why?
@@ -674,7 +684,7 @@ class SimulatorBase(ABC):
         #     ax.plot(self._x_pos[self.tr], self._y_pos[self.tr], 'y.', markersize=marker_size)
 
         ax.plot(self._x_pos[0], self._y_pos[0], 'b.', markersize=25)
-        ax.plot(self._x_pos[1:], self._y_pos[1:], 'r.', markersize=2)
+        ax.plot(self._x_pos[1:], self._y_pos[1:], 'r.', markersize=0.5)
 
         # ax.text(self._box_l / 5, self._box_l, f"total absorbed: {total_absorbed}", fontsize=14)
         # ax.text(self._box_l / 5, self._box_l + 1.25, f"timestep: {self._time_count}", fontsize=14)
@@ -697,7 +707,7 @@ class SimulatorBase(ABC):
             self.time_step()
 
             if self._make_movies:
-                if self._time_count % 10 == 0:
+                if self._time_count % self._counts_per_snap_shot == 0:
                     print(f"Saving frame: {self._frame_num}")
                     self._save_frame(output_dir)
 
